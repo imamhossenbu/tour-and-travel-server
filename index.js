@@ -557,8 +557,8 @@ app.post('/sslcommerz/initiate', async (req, res) => {
     currency: 'BDT',
     tran_id: tran_id, // Use unique tran_id for each API call
     success_url: 'http://localhost:5000/success',
-    fail_url: 'http://localhost:5175/fail',
-    cancel_url: 'http://localhost:5175/cancel',
+    fail_url: 'http://localhost:5173/fail',
+    cancel_url: 'http://localhost:5173/cancel',
     ipn_url: 'http://localhost:5000/ipn',
     shipping_method: 'Courier',
     product_name: 'Computer.',
@@ -706,10 +706,8 @@ app.post('/success', async (req, res) => {
               return res.status(500).json({ success: false, message: 'Error updating booking status' });
             }
 
-            res.json({
-              success: true,
-              message: 'Payment validated and booking status updated to confirmed.',
-            });
+            // ✅ Redirect to the My Bookings page on frontend after successful payment
+            return res.redirect(`http://localhost:5173/payment-success?tran_id=${tran_id}`);
           });
         } else {
           return res.status(400).json({
@@ -854,15 +852,15 @@ app.delete("/admin/payments/:paymentId", (req, res) => {
 
 // Get payments for the logged-in user
 app.get("/user/payments/:email", (req, res) => {
-  const {email} = req.params; // Assuming the user is authenticated and `req.user` contains the logged-in user's data
+  const { email } = req.params; // Assuming the user is authenticated and `req.user` contains the logged-in user's data
 
   const query = "SELECT * FROM payments WHERE cus_email = ?";
   db.query(query, [email], (err, result) => {
-      if (err) {
-          console.error("Error fetching payments:", err);
-          return res.status(500).json({ error: "Database query failed" });
-      }
-      res.status(200).json({ data: result });
+    if (err) {
+      console.error("Error fetching payments:", err);
+      return res.status(500).json({ error: "Database query failed" });
+    }
+    res.status(200).json({ data: result });
   });
 });
 
