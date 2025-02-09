@@ -546,23 +546,23 @@ app.post('/sslcommerz/initiate', async (req, res) => {
     payment_status
   } = req.body;
 
-  // const store_id = process.env.SSL_store_id;
-  // const store_passwd = process.env.SSL_store_passwd;
-
-  const tran_id = `tran_${Date.now()}`
+  // Generate a unique transaction ID
+  const tran_id = `tran_${Date.now()}`;
+  
+  // Prepare payment data
   const paymentData = {
-    store_id: 'trave67a744c6aff5c',
-    store_passwd: "trave67a744c6aff5c@ssl",
+    store_id: process.env.SSL_STORE_ID,    // Use environment variable for store_id
+    store_passwd: process.env.SSL_STORE_PASSWD,  // Use environment variable for store_passwd
     total_amount: amount,
-    currency: 'BDT',
-    tran_id: tran_id, // Use unique tran_id for each API call
-    success_url: 'https://tour-and-travel-server-sigma.vercel.app/success',
-    fail_url: 'https://simple-firebase-9936c.web.app/fail',
-    cancel_url: 'https://simple-firebase-9936c.web.app/cancel',
-    ipn_url: 'https://tour-and-travel-server-sigma.vercel.app/ipn',
+    currency: currency || 'BDT',  // Default to 'BDT' if currency is not provided
+    tran_id: tran_id,
+    success_url: process.env.SUCCESS_URL,    // Success URL from environment variable
+    fail_url: process.env.FAIL_URL,    // Fail URL from environment variable
+    cancel_url: process.env.CANCEL_URL,    // Cancel URL from environment variable
+    ipn_url: process.env.IPN_URL,    // IPN URL for instant payment notification
     shipping_method: 'Courier',
-    product_name: 'Computer.',
-    product_category: 'Electronic',
+    product_name: 'Product',   // You can change this if needed
+    product_category: 'General',
     product_profile: 'general',
     cus_name: cus_name,
     cus_email: cus_email,
@@ -585,7 +585,7 @@ app.post('/sslcommerz/initiate', async (req, res) => {
 
   try {
     const iniResponse = await axios({
-      url: "https://sandbox.sslcommerz.com/gwprocess/v4/api.php",
+      url: process.env.NODE_ENV === 'production' ? 'https://securepay.sslcommerz.com/gwprocess/v4/api.php' : 'https://sandbox.sslcommerz.com/gwprocess/v4/api.php',
       method: "POST",
       data: paymentData,
       headers: {
@@ -645,6 +645,7 @@ app.post('/sslcommerz/initiate', async (req, res) => {
 });
 
 
+
 app.post('/success', async (req, res) => {
   const paymentData = req.body;
 
@@ -655,8 +656,10 @@ app.post('/success', async (req, res) => {
   const { val_id, tran_id } = paymentData;
 
   try {
-    // Corrected URL for SSLCommerz validation API request
-    const validationUrl = `https://sandbox.sslcommerz.com/validator/api/validationserverAPI.php?val_id=${val_id}&store_id=trave67a744c6aff5c&store_passwd=trave67a744c6aff5c@ssl&format=json`;
+    // Corrected URL for SSLCommerz validation API request (using production or sandbox URLs)
+    const validationUrl = process.env.NODE_ENV === 'production' 
+      ? `https://securepay.sslcommerz.com/validator/api/validationserverAPI.php?val_id=${val_id}&store_id=${process.env.SSL_STORE_ID}&store_passwd=${process.env.SSL_STORE_PASSWD}&format=json` 
+      : `https://sandbox.sslcommerz.com/validator/api/validationserverAPI.php?val_id=${val_id}&store_id=${process.env.SSL_STORE_ID}&store_passwd=${process.env.SSL_STORE_PASSWD}&format=json`;
 
     // Make GET request to validate payment
     const isValidPayment = await axios.get(validationUrl);
@@ -731,6 +734,7 @@ app.post('/success', async (req, res) => {
     });
   }
 });
+
 
 
 
