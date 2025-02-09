@@ -556,10 +556,10 @@ app.post('/sslcommerz/initiate', async (req, res) => {
     total_amount: amount,
     currency: 'BDT',
     tran_id: tran_id, // Use unique tran_id for each API call
-    success_url: 'http://localhost:5000/success',
-    fail_url: 'http://localhost:5173/fail',
-    cancel_url: 'http://localhost:5173/cancel',
-    ipn_url: 'http://localhost:5000/ipn',
+    success_url: 'https://tour-and-travel-server-sigma.vercel.app/success',
+    fail_url: 'https://simple-firebase-9936c.web.app/fail',
+    cancel_url: 'https://simple-firebase-9936c.web.app/cancel',
+    ipn_url: 'https://tour-and-travel-server-sigma.vercel.app/ipn',
     shipping_method: 'Courier',
     product_name: 'Computer.',
     product_category: 'Electronic',
@@ -707,7 +707,7 @@ app.post('/success', async (req, res) => {
             }
 
             // ✅ Redirect to the My Bookings page on frontend after successful payment
-            return res.redirect(`http://localhost:5173/payment-success?tran_id=${tran_id}`);
+            return res.redirect(`https://simple-firebase-9936c.web.app/payment-success?tran_id=${tran_id}`);
           });
         } else {
           return res.status(400).json({
