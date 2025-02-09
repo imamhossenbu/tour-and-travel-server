@@ -706,7 +706,7 @@ app.post('/success', async (req, res) => {
           db.query(bookingUpdateQuery, bookingValues, (err, result) => {
             if (err) {
               console.error('Error updating booking status:', err);
-              return res.status(500).json({ success: false, message: 'Error updating booking status' });
+              return res.status(500).json({ success: false, message: 'Error update booking status' });
             }
 
             // ✅ Redirect to the My Bookings page on frontend after successful payment
