@@ -165,6 +165,36 @@ app.post('/packages', (req, res) => {
 })
 
 
+
+// ✅ Get Package Details using Wishlist ID (Using JOIN)
+app.get("/wishlist/package/:wishlistId", (req, res) => {
+  const { wishlistId } = req.params;
+
+  // SQL Query: Join wishlist and packages to get package details
+  const query = `
+      SELECT p.id, p.destination_id, p.title, p.description, p.price, p.duration, p.image
+      FROM wishlist w
+      INNER JOIN packages p ON w.package_id = p.id
+      WHERE w.id = ?;
+  `;
+
+  db.query(query, [wishlistId], (err, result) => {
+      if (err) {
+          console.error("Error fetching package by wishlist ID:", err);
+          res.status(500).json({ error: "Internal Server Error" });
+          return;
+      }
+
+      if (!result || result.length === 0) {
+          res.status(404).json({ error: "Package not found for this wishlist item" });
+          return;
+      }
+
+      res.json({ data: result });
+  });
+});
+
+
 // get all packages
 
 app.get('/packages', (req, res) => {
@@ -546,23 +576,23 @@ app.post('/sslcommerz/initiate', async (req, res) => {
     payment_status
   } = req.body;
 
-  // Generate a unique transaction ID
-  const tran_id = `tran_${Date.now()}`;
-  
-  // Prepare payment data
+  // const store_id = process.env.SSL_store_id;
+  // const store_passwd = process.env.SSL_store_passwd;
+
+  const tran_id = `tran_${Date.now()}`
   const paymentData = {
-    store_id: process.env.SSL_STORE_ID,    // Use environment variable for store_id
-    store_passwd: process.env.SSL_STORE_PASSWD,  // Use environment variable for store_passwd
+    store_id: 'trave67a744c6aff5c',
+    store_passwd: "trave67a744c6aff5c@ssl",
     total_amount: amount,
-    currency: currency || 'BDT',  // Default to 'BDT' if currency is not provided
-    tran_id: tran_id,
-    success_url: process.env.SUCCESS_URL,    // Success URL from environment variable
-    fail_url: process.env.FAIL_URL,    // Fail URL from environment variable
-    cancel_url: process.env.CANCEL_URL,    // Cancel URL from environment variable
-    ipn_url: process.env.IPN_URL,    // IPN URL for instant payment notification
+    currency: 'BDT',
+    tran_id: tran_id, // Use unique tran_id for each API call
+    success_url: 'http://localhost:5000/success',
+    fail_url: 'http://localhost:5173/fail',
+    cancel_url: 'http://localhost:5173/cancel',
+    ipn_url: 'http://localhost:5000/ipn',
     shipping_method: 'Courier',
-    product_name: 'Product',   // You can change this if needed
-    product_category: 'General',
+    product_name: 'Computer.',
+    product_category: 'Electronic',
     product_profile: 'general',
     cus_name: cus_name,
     cus_email: cus_email,
@@ -585,7 +615,7 @@ app.post('/sslcommerz/initiate', async (req, res) => {
 
   try {
     const iniResponse = await axios({
-      url: process.env.NODE_ENV === 'production' ? 'https://securepay.sslcommerz.com/gwprocess/v4/api.php' : 'https://sandbox.sslcommerz.com/gwprocess/v4/api.php',
+      url: "https://sandbox.sslcommerz.com/gwprocess/v4/api.php",
       method: "POST",
       data: paymentData,
       headers: {
@@ -645,7 +675,6 @@ app.post('/sslcommerz/initiate', async (req, res) => {
 });
 
 
-
 app.post('/success', async (req, res) => {
   const paymentData = req.body;
 
@@ -656,10 +685,8 @@ app.post('/success', async (req, res) => {
   const { val_id, tran_id } = paymentData;
 
   try {
-    // Corrected URL for SSLCommerz validation API request (using production or sandbox URLs)
-    const validationUrl = process.env.NODE_ENV === 'production' 
-      ? `https://securepay.sslcommerz.com/validator/api/validationserverAPI.php?val_id=${val_id}&store_id=${process.env.SSL_STORE_ID}&store_passwd=${process.env.SSL_STORE_PASSWD}&format=json` 
-      : `https://sandbox.sslcommerz.com/validator/api/validationserverAPI.php?val_id=${val_id}&store_id=${process.env.SSL_STORE_ID}&store_passwd=${process.env.SSL_STORE_PASSWD}&format=json`;
+    // Corrected URL for SSLCommerz validation API request
+    const validationUrl = `https://sandbox.sslcommerz.com/validator/api/validationserverAPI.php?val_id=${val_id}&store_id=trave67a744c6aff5c&store_passwd=trave67a744c6aff5c@ssl&format=json`;
 
     // Make GET request to validate payment
     const isValidPayment = await axios.get(validationUrl);
@@ -706,11 +733,11 @@ app.post('/success', async (req, res) => {
           db.query(bookingUpdateQuery, bookingValues, (err, result) => {
             if (err) {
               console.error('Error updating booking status:', err);
-              return res.status(500).json({ success: false, message: 'Error update booking status' });
+              return res.status(500).json({ success: false, message: 'Error updating booking status' });
             }
 
             // ✅ Redirect to the My Bookings page on frontend after successful payment
-            return res.redirect(`https://simple-firebase-9936c.web.app/payment-success?tran_id=${tran_id}`);
+            return res.redirect(`http://localhost:5173/payment-success?tran_id=${tran_id}`);
           });
         } else {
           return res.status(400).json({
@@ -734,7 +761,6 @@ app.post('/success', async (req, res) => {
     });
   }
 });
-
 
 
 
