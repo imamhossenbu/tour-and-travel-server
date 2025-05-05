@@ -13,11 +13,11 @@ app.use(express.json());
 app.use(express.urlencoded());
 
 const db = mysql.createConnection({
-  host: process.env.DB_HOST || 'b1nv4i2whjmhsbptddw6-mysql.services.clever-cloud.com',
-  user: process.env.DB_USER || 'u4vszbfonfsp3gqz',
-  password: process.env.DB_PASS || 'pMVmPCNUE6E9C2vZ2jqJ',
-  database: process.env.DB_NAME || 'b1nv4i2whjmhsbptddw6',
-  port: process.env.DB_PORT || 3306,
+  host: process.env.MYSQL_ADDON_HOST,
+  user: process.env.MYSQL_ADDON_USER ,
+  password: process.env.MYSQL_ADDON_PASSWORD ,
+  database: process.env.MYSQL_ADDON_DB ,
+  port: process.env.MYSQL_ADDON_PORT || 3306,
 });
 
 app.post("/api/users", (req, res) => {
@@ -1097,3 +1097,4 @@ app.get("/", (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
+
