@@ -1,69 +1,71 @@
-const express = require('express');
+const express = require("express");
 const app = express();
-const mysql = require('mysql2');
-const dotenv = require('dotenv');
-const cors = require('cors');  // Import CORS
+const mysql = require("mysql2"); 
+const dotenv = require("dotenv");
+const cors = require("cors"); // Import CORS
 const PORT = process.env.PORT || 5000;
 dotenv.config();
-const axios = require('axios')
+const axios = require("axios"); // Import Axios for making HTTP requests
 
 // middleware
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded());
 
-
-
 const db = mysql.createConnection({
-  host: process.env.DB_HOST || 'localhost',
-  user: process.env.DB_USER || 'root',
-  password: process.env.DB_PASS || '',
-  database: process.env.DB_NAME || 'tour_management',
+  host: process.env.DB_HOST || 'b1nv4i2whjmhsbptddw6-mysql.services.clever-cloud.com',
+  user: process.env.DB_USER || 'u4vszbfonfsp3gqz',
+  password: process.env.DB_PASS || 'pMVmPCNUE6E9C2vZ2jqJ',
+  database: process.env.DB_NAME || 'b1nv4i2whjmhsbptddw6',
+  port: process.env.DB_PORT || 3306,
 });
 
-
-app.post('/api/users', (req, res) => {
+app.post("/api/users", (req, res) => {
   const { name, email } = req.body;
 
   if (!name || !email) {
-    return res.status(400).json({ error: 'Name and email are required' });
+    return res.status(400).json({ error: "Name and email are required" });
   }
 
-  const checkUserQuery = 'SELECT * FROM users WHERE email = ?';
+  const checkUserQuery = "SELECT * FROM users WHERE email = ?";
 
   db.query(checkUserQuery, [email], (err, results) => {
     if (err) {
-      console.error('Database error:', err);
-      return res.status(500).json({ error: 'Database error' });
+      console.error("Database error:", err);
+      return res.status(500).json({ error: "Database error" });
     }
 
-    // If the user does not exist, insert them 
-    const insertUserQuery = 'INSERT INTO users (name, email, role) VALUES (?, ?, ?)';
-    const role = 'user';
+    // If the user does not exist, insert them
+    const insertUserQuery =
+      "INSERT INTO users (name, email, role) VALUES (?, ?, ?)";
+    const role = "user";
 
     db.query(insertUserQuery, [name, email, role], (err, result) => {
       if (err) {
-        console.error('Error inserting user:', err);
-        return res.status(500).json({ error: 'Database error' });
+        console.error("Error inserting user:", err);
+        return res.status(500).json({ error: "Database error" });
       }
 
-      res.status(201).json({ success: true, message: 'Sign up successful', userId: result.insertId });
+      res
+        .status(201)
+        .json({
+          success: true,
+          message: "Sign up successful",
+          userId: result.insertId,
+        });
     });
   });
 });
 
-
-
-app.get('/api/users', (req, res) => {
-  const query = 'SELECT id, name, email, role FROM users';
+app.get("/api/users", (req, res) => {
+  const query = "SELECT id, name, email, role FROM users";
   db.query(query, (err, results) => {
-    if (err) return res.status(500).json({ error: 'Database error' });
+    if (err) return res.status(500).json({ error: "Database error" });
     res.json({ success: true, data: results });
   });
 });
 
-
-app.get('/users/isAdmin/:email', (req, res) => {
+app.get("/users/isAdmin/:email", (req, res) => {
   const email = req.params.email;
   const query = "SELECT role FROM users WHERE email = ?";
   db.query(query, [email], (err, results) => {
@@ -76,35 +78,33 @@ app.get('/users/isAdmin/:email', (req, res) => {
       res.json({ isAdmin: false });
     }
   });
-})
+});
 
-
-app.patch('/api/users/make-admin/:id', (req, res) => {
+app.patch("/api/users/make-admin/:id", (req, res) => {
   const id = req.params.id;
   const { role } = req.body;
 
   if (!role) {
-    return res.status(400).json({ success: false, error: 'Role is required' });
+    return res.status(400).json({ success: false, error: "Role is required" });
   }
 
-  const query = 'UPDATE users SET role = ? WHERE id = ?';
+  const query = "UPDATE users SET role = ? WHERE id = ?";
 
   db.query(query, [role, id], (err, result) => {
     if (err) {
-      console.error('Error updating user role:', err);
-      return res.status(500).json({ success: false, error: 'Database error' });
+      console.error("Error updating user role:", err);
+      return res.status(500).json({ success: false, error: "Database error" });
     }
 
     if (result.affectedRows === 0) {
-      return res.status(404).json({ success: false, error: 'User not found' });
+      return res.status(404).json({ success: false, error: "User not found" });
     }
 
-    res.status(200).json({ success: true, message: 'User role updated successfully' });
+    res
+      .status(200)
+      .json({ success: true, message: "User role updated successfully" });
   });
-})
-
-
-
+});
 
 // destination tables
 
@@ -112,19 +112,29 @@ app.post("/destinations", (req, res) => {
   const { name, location, description, image } = req.body;
 
   if (!name || !location || !description || !image) {
-    return res.status(400).json({ success: false, message: "All fields are required" });
+    return res
+      .status(400)
+      .json({ success: false, message: "All fields are required" });
   }
 
-  const query = "INSERT INTO destinations (name, location, description, image) VALUES (?, ?, ?, ?)";
+  const query =
+    "INSERT INTO destinations (name, location, description, image) VALUES (?, ?, ?, ?)";
   db.query(query, [name, location, description, image], (err, result) => {
     if (err) {
       console.error("Error inserting destination:", err);
-      return res.status(500).json({ success: false, message: "Database error" });
+      return res
+        .status(500)
+        .json({ success: false, message: "Database error" });
     }
-    res.status(201).json({ success: true, message: "Destination added successfully!", id: result.insertId });
+    res
+      .status(201)
+      .json({
+        success: true,
+        message: "Destination added successfully!",
+        id: result.insertId,
+      });
   });
 });
-
 
 // API endpoint to get all destinations
 app.get("/destinations", (req, res) => {
@@ -133,124 +143,121 @@ app.get("/destinations", (req, res) => {
   db.query(query, (err, results) => {
     if (err) {
       console.error("Error fetching destinations:", err);
-      return res.status(500).json({ success: false, message: "Database error" });
+      return res
+        .status(500)
+        .json({ success: false, message: "Database error" });
     }
 
     res.status(200).json({ success: true, data: results });
   });
 });
 
-
-
 // packages tables
 
 // post packages
-app.post('/packages', (req, res) => {
-  const { destination_id, title, description, price, duration, image } = req.body;
+app.post("/packages", (req, res) => {
+  const { destination_id, title, description, price, duration, image } =
+    req.body;
 
-  if (!destination_id || !title || !description || !price || !duration || !image) {
-    return res.status(400).json({ success: false, message: "All fields are required" });
+  if (
+    !destination_id ||
+    !title ||
+    !description ||
+    !price ||
+    !duration ||
+    !image
+  ) {
+    return res
+      .status(400)
+      .json({ success: false, message: "All fields are required" });
   }
 
-  const query = "INSERT INTO packages (destination_id, title, description, price, duration, image) VALUES (?,?,?,?,?,?)"
+  const query =
+    "INSERT INTO packages (destination_id, title, description, price, duration, image) VALUES (?,?,?,?,?,?)";
 
-  db.query(query, [destination_id, title, description, price, duration, image], (err, result) => {
-    if (err) {
-      console.error("Error inserting destination:", err);
-      return res.status(500).json({ success: false, message: "Database error" });
-    }
-    res.status(201).json({ success: true, message: "Destination added successfully!", id: result.insertId });
-  });
-
-})
-
-
-
-// ✅ Get Package Details using Wishlist ID (Using JOIN)
-app.get("/wishlist/package/:wishlistId", (req, res) => {
-  const { wishlistId } = req.params;
-
-  // SQL Query: Join wishlist and packages to get package details
-  const query = `
-      SELECT p.id, p.destination_id, p.title, p.description, p.price, p.duration, p.image
-      FROM wishlist w
-      INNER JOIN packages p ON w.package_id = p.id
-      WHERE w.id = ?;
-  `;
-
-  db.query(query, [wishlistId], (err, result) => {
+  db.query(
+    query,
+    [destination_id, title, description, price, duration, image],
+    (err, result) => {
       if (err) {
-          console.error("Error fetching package by wishlist ID:", err);
-          res.status(500).json({ error: "Internal Server Error" });
-          return;
+        console.error("Error inserting destination:", err);
+        return res
+          .status(500)
+          .json({ success: false, message: "Database error" });
       }
-
-      if (!result || result.length === 0) {
-          res.status(404).json({ error: "Package not found for this wishlist item" });
-          return;
-      }
-
-      res.json({ data: result });
-  });
+      res
+        .status(201)
+        .json({
+          success: true,
+          message: "Destination added successfully!",
+          id: result.insertId,
+        });
+    }
+  );
 });
-
 
 // get all packages
 
-app.get('/packages', (req, res) => {
+app.get("/packages", (req, res) => {
   const query = "SELECT * FROM packages";
 
   db.query(query, (err, results) => {
     if (err) {
       console.error("Error fetching destinations:", err);
-      return res.status(500).json({ success: false, message: "Database error" });
+      return res
+        .status(500)
+        .json({ success: false, message: "Database error" });
     }
 
     res.status(200).json({ success: true, data: results });
   });
-
-})
-
+});
 
 // get destination by id
-app.get('/destinations/:id', (req, res) => {
+app.get("/destinations/:id", (req, res) => {
   const { id } = req.params;
 
   const query = "SELECT * FROM destinations WHERE id = ?";
   db.query(query, [id], (err, results) => {
     if (err) {
       console.error("Error fetching destination details:", err);
-      return res.status(500).json({ success: false, message: "Database error" });
+      return res
+        .status(500)
+        .json({ success: false, message: "Database error" });
     }
 
     if (results.length === 0) {
-      return res.status(404).json({ success: false, message: "Destination not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Destination not found" });
     }
 
     res.status(200).json({ success: true, data: results[0] });
   });
 });
 
-
 // get packages by destination_id
-app.get('/packages', (req, res) => {
+app.get("/packages", (req, res) => {
   const { id } = req.query;
 
   if (!id) {
-    return res.status(400).json({ success: false, message: "Destination ID is required" });
+    return res
+      .status(400)
+      .json({ success: false, message: "Destination ID is required" });
   }
 
   const query = "SELECT * FROM packages WHERE destination_id = ?";
   db.query(query, [parseInt(id)], (err, results) => {
     if (err) {
       console.error("Error fetching packages:", err);
-      return res.status(500).json({ success: false, message: "Database error" });
+      return res
+        .status(500)
+        .json({ success: false, message: "Database error" });
     }
 
     res.status(200).json({ success: true, data: results });
   });
 });
-
 
 // itinerary
 app.post("/itinerary", (req, res) => {
@@ -274,35 +281,43 @@ app.post("/itinerary", (req, res) => {
       console.error("Error inserting itinerary:", err);
       return res.status(500).json({ message: "Database error" });
     }
-    res.status(201).json({ message: "Itinerary added successfully", inserted: result.affectedRows });
+    res
+      .status(201)
+      .json({
+        message: "Itinerary added successfully",
+        inserted: result.affectedRows,
+      });
   });
 });
-
 
 app.get("/itinerary/:package_id", (req, res) => {
   const { package_id } = req.params;
-  db.query("SELECT * FROM itinerary WHERE package_id = ?", [package_id], (err, result) => {
-    if (err) return res.status(500).json({ message: "Database error" });
-    res.json(result);
-  });
+  db.query(
+    "SELECT * FROM itinerary WHERE package_id = ?",
+    [package_id],
+    (err, result) => {
+      if (err) return res.status(500).json({ message: "Database error" });
+      res.json(result);
+    }
+  );
 });
-
 
 app.get("/packages/:package_id", (req, res) => {
   const { package_id } = req.params;
-  db.query("SELECT * FROM packages WHERE id = ?", [package_id], (err, result) => {
-    if (err) return res.status(500).json({ message: "Database error" });
-    res.json(result);
-  });
+  db.query(
+    "SELECT * FROM packages WHERE id = ?",
+    [package_id],
+    (err, result) => {
+      if (err) return res.status(500).json({ message: "Database error" });
+      res.json(result);
+    }
+  );
 });
 
-
-
-// reviews 
-app.post('/reviews/:id', (req, res) => {
+// reviews
+app.post("/reviews/:id", (req, res) => {
   const { id } = req.params; // Package ID from URL parameter
   const { rating, message, name, uid, photo } = req.body; // Rating, message, user info
-
 
   // Insert the review into the 'reviews' table
   const query = `
@@ -312,48 +327,46 @@ app.post('/reviews/:id', (req, res) => {
 
   db.query(query, [id, rating, message, name, uid, photo], (err, result) => {
     if (err) {
-      console.error('Error inserting review:', err);
-      return res.status(500).json({ error: 'Failed to submit review' });
+      console.error("Error inserting review:", err);
+      return res.status(500).json({ error: "Failed to submit review" });
     }
-    return res.status(201).json({ message: 'Review submitted successfully' });
+    return res.status(201).json({ message: "Review submitted successfully" });
   });
 });
 
-app.get('/reviews/:id', (req, res) => {
+app.get("/reviews/:id", (req, res) => {
   const { id } = req.params; // Package ID from URL parameter
 
-  const query = 'SELECT * FROM reviews WHERE package_id = ?';
+  const query = "SELECT * FROM reviews WHERE package_id = ?";
 
   db.query(query, [id], (err, results) => {
     if (err) {
-      console.error('Error fetching reviews:', err);
-      return res.status(500).json({ error: 'Failed to fetch reviews' });
+      console.error("Error fetching reviews:", err);
+      return res.status(500).json({ error: "Failed to fetch reviews" });
     }
     return res.status(200).json(results); // Return the reviews for the specific package
   });
 });
 
-
 // wishlist
 
-app.post('/wishlist/:id', (req, res) => {
+app.post("/wishlist/:id", (req, res) => {
   const { id } = req.params;
   const { uid } = req.body;
 
   console.log(uid);
-  const query = `INSERT INTO wishlist (user_id,package_id) VALUES (?, ?)`
+  const query = `INSERT INTO wishlist (user_id,package_id) VALUES (?, ?)`;
 
   db.query(query, [uid, id], (err, result) => {
     if (err) {
-      console.error('Error inserting review:', err);
-      return res.status(500).json({ error: 'Failed to submit review' });
+      console.error("Error inserting review:", err);
+      return res.status(500).json({ error: "Failed to submit review" });
     }
-    return res.status(201).json({ message: 'Review submitted successfully' });
-  })
-})
+    return res.status(201).json({ message: "Review submitted successfully" });
+  });
+});
 
-
-app.get('/wishlist/:id', (req, res) => {
+app.get("/wishlist/:id", (req, res) => {
   const id = req.params.id;
 
   const query = "SELECT * FROM wishlist WHERE user_id = ?";
@@ -364,7 +377,7 @@ app.get('/wishlist/:id', (req, res) => {
     }
     res.json(results);
   });
-})
+});
 
 app.get("/reviews", (req, res) => {
   const sql = "SELECT * FROM reviews";
@@ -378,8 +391,7 @@ app.get("/reviews", (req, res) => {
   });
 });
 
-
-app.delete('/reviews/:id', (req, res) => {
+app.delete("/reviews/:id", (req, res) => {
   const { id } = req.params;
   const query = "DELETE FROM reviews WHERE id = ?";
 
@@ -397,7 +409,7 @@ app.delete('/reviews/:id', (req, res) => {
   });
 });
 
-app.patch('/reviews/:id', (req, res) => {
+app.patch("/reviews/:id", (req, res) => {
   const { id } = req.params;
   const { message, rating } = req.body;
 
@@ -417,31 +429,57 @@ app.patch('/reviews/:id', (req, res) => {
   });
 });
 
-
 // booking
 
 app.post("/bookings", (req, res) => {
-  const { userId, packageId, travelDate, numTravelers, phone, email, totalPrice } = req.body;
+  const {
+    userId,
+    packageId,
+    travelDate,
+    numTravelers,
+    phone,
+    email,
+    totalPrice,
+  } = req.body;
 
-  if (!userId || !packageId || !travelDate || !numTravelers || !phone || !email || !totalPrice) {
-    return res.status(400).json({ success: false, message: "All fields are required!" });
+  if (
+    !userId ||
+    !packageId ||
+    !travelDate ||
+    !numTravelers ||
+    !phone ||
+    !email ||
+    !totalPrice
+  ) {
+    return res
+      .status(400)
+      .json({ success: false, message: "All fields are required!" });
   }
 
   const query = `
       INSERT INTO bookings (user_id, package_id, travel_date, num_travelers, phone, email, total_price) 
       VALUES (?, ?, ?, ?, ?, ?, ?)`;
 
-  db.query(query, [userId, packageId, travelDate, numTravelers, phone, email, totalPrice], (err, result) => {
-    if (err) {
-      console.error("Error inserting booking:", err);
-      return res.status(500).json({ error: "Database error" });
+  db.query(
+    query,
+    [userId, packageId, travelDate, numTravelers, phone, email, totalPrice],
+    (err, result) => {
+      if (err) {
+        console.error("Error inserting booking:", err);
+        return res.status(500).json({ error: "Database error" });
+      }
+
+      // ✅ Send the booking ID back so frontend can redirect to payment
+      res
+        .status(201)
+        .json({
+          success: true,
+          bookingId: result.insertId,
+          message: "Booking confirmed!",
+        });
     }
-
-    // ✅ Send the booking ID back so frontend can redirect to payment
-    res.status(201).json({ success: true, bookingId: result.insertId, message: "Booking confirmed!" });
-  });
+  );
 });
-
 
 app.get("/bookings/:userId", (req, res) => {
   const { userId } = req.params;
@@ -495,7 +533,9 @@ app.patch("/bookings/cancel/:bookingId", (req, res) => {
       return res.status(500).json({ error: "Database query failed" });
     }
 
-    res.status(200).json({ success: true, message: "Booking cancelled successfully" });
+    res
+      .status(200)
+      .json({ success: true, message: "Booking cancelled successfully" });
   });
 });
 
@@ -513,23 +553,24 @@ app.patch("/bookings/approve/:bookingId", (req, res) => {
   });
 });
 
-
 // ✅ Approve Cancellation Request (Admin Grants Refund)
 app.patch("/bookings/cancel/approve/:bookingId", (req, res) => {
   const { bookingId } = req.params;
 
-  const query = "UPDATE bookings SET status = 'Cancelled with Refund' WHERE id = ?";
+  const query =
+    "UPDATE bookings SET status = 'Cancelled with Refund' WHERE id = ?";
   db.query(query, [bookingId], (err, result) => {
     if (err) {
       console.error("Error approving cancellation:", err);
       return res.status(500).json({ error: "Database update failed" });
     }
-    res.status(200).json({ success: true, message: "Cancellation approved with refund!" });
+    res
+      .status(200)
+      .json({ success: true, message: "Cancellation approved with refund!" });
   });
 });
 
-
-app.get('/bookings/details/:bookingId', (req, res) => {
+app.get("/bookings/details/:bookingId", (req, res) => {
   const { bookingId } = req.params; // Changed to use 'id' as it comes from the route parameter
   const query = `
     SELECT 
@@ -561,10 +602,9 @@ app.get('/bookings/details/:bookingId', (req, res) => {
   });
 });
 
-
 // payment initiated
 
-app.post('/sslcommerz/initiate', async (req, res) => {
+app.post("/sslcommerz/initiate", async (req, res) => {
   const {
     booking_id,
     user_id,
@@ -573,44 +613,44 @@ app.post('/sslcommerz/initiate', async (req, res) => {
     cus_name,
     cus_email,
     cus_phone,
-    payment_status
+    payment_status,
   } = req.body;
 
   // const store_id = process.env.SSL_store_id;
   // const store_passwd = process.env.SSL_store_passwd;
 
-  const tran_id = `tran_${Date.now()}`
+  const tran_id = `tran_${Date.now()}`;
   const paymentData = {
-    store_id: 'trave67a744c6aff5c',
+    store_id: "trave67a744c6aff5c",
     store_passwd: "trave67a744c6aff5c@ssl",
     total_amount: amount,
-    currency: 'BDT',
+    currency: "BDT",
     tran_id: tran_id, // Use unique tran_id for each API call
-    success_url: 'http://localhost:5000/success',
-    fail_url: 'http://localhost:5173/fail',
-    cancel_url: 'http://localhost:5173/cancel',
-    ipn_url: 'http://localhost:5000/ipn',
-    shipping_method: 'Courier',
-    product_name: 'Computer.',
-    product_category: 'Electronic',
-    product_profile: 'general',
+    success_url: "http://localhost:5000/success",
+    fail_url: "http://localhost:5173/fail",
+    cancel_url: "http://localhost:5173/cancel",
+    ipn_url: "http://localhost:5000/ipn",
+    shipping_method: "Courier",
+    product_name: "Computer.",
+    product_category: "Electronic",
+    product_profile: "general",
     cus_name: cus_name,
     cus_email: cus_email,
-    cus_add1: 'Dhaka',
-    cus_add2: 'Dhaka',
-    cus_city: 'Dhaka',
-    cus_state: 'Dhaka',
-    cus_postcode: '1000',
-    cus_country: 'Bangladesh',
+    cus_add1: "Dhaka",
+    cus_add2: "Dhaka",
+    cus_city: "Dhaka",
+    cus_state: "Dhaka",
+    cus_postcode: "1000",
+    cus_country: "Bangladesh",
     cus_phone: cus_phone,
-    cus_fax: '01711111111',
-    ship_name: 'Customer Name',
-    ship_add1: 'Dhaka',
-    ship_add2: 'Dhaka',
-    ship_city: 'Dhaka',
-    ship_state: 'Dhaka',
+    cus_fax: "01711111111",
+    ship_name: "Customer Name",
+    ship_add1: "Dhaka",
+    ship_add2: "Dhaka",
+    ship_city: "Dhaka",
+    ship_state: "Dhaka",
     ship_postcode: 1000,
-    ship_country: 'Bangladesh',
+    ship_country: "Bangladesh",
   };
 
   try {
@@ -619,8 +659,8 @@ app.post('/sslcommerz/initiate', async (req, res) => {
       method: "POST",
       data: paymentData,
       headers: {
-        "Content-Type": "application/x-www-form-urlencoded"
-      }
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
     });
 
     if (iniResponse.data.GatewayPageURL) {
@@ -639,43 +679,43 @@ app.post('/sslcommerz/initiate', async (req, res) => {
         cus_name,
         cus_email,
         cus_phone,
-        new Date(),           // Set payment date to current time
-        payment_status,       // Payment status (could be "Pending" initially)
-        'SSLCommerz',         // Payment method
+        new Date(), // Set payment date to current time
+        payment_status, // Payment status (could be "Pending" initially)
+        "SSLCommerz", // Payment method
         tran_id, // Transaction ID
       ];
 
       db.query(paymentInsertQuery, paymentValues, (err, result) => {
         if (err) {
-          console.error('Error inserting payment data:', err);
-          return res.status(500).json({ success: false, message: 'Failed to save payment data' });
+          console.error("Error inserting payment data:", err);
+          return res
+            .status(500)
+            .json({ success: false, message: "Failed to save payment data" });
         }
 
         // Respond with success and redirect URL
         res.json({
           success: true,
-          message: 'Payment initialization successful',
+          message: "Payment initialization successful",
           GatewayPageURL: iniResponse.data.GatewayPageURL, // Provide URL to redirect user
         });
       });
     } else {
       res.status(500).json({
         success: false,
-        message: 'Payment initialization failed',
+        message: "Payment initialization failed",
       });
     }
-
   } catch (error) {
-    console.error('Error initiating payment:', error);
+    console.error("Error initiating payment:", error);
     res.status(500).json({
       success: false,
-      message: 'Error initiating payment',
+      message: "Error initiating payment",
     });
   }
 });
 
-
-app.post('/success', async (req, res) => {
+app.post("/success", async (req, res) => {
   const paymentData = req.body;
 
   // Log payment data for debugging
@@ -691,19 +731,21 @@ app.post('/success', async (req, res) => {
     // Make GET request to validate payment
     const isValidPayment = await axios.get(validationUrl);
 
-    if (isValidPayment.data.status === 'VALID') {
+    if (isValidPayment.data.status === "VALID") {
       // 1. Update payment status
       const paymentUpdateQuery = `
           UPDATE payments
           SET payment_status = ?
           WHERE transaction_id = ?
         `;
-      const paymentValues = ['success', tran_id];
+      const paymentValues = ["success", tran_id];
 
       db.query(paymentUpdateQuery, paymentValues, (err, result) => {
         if (err) {
-          console.error('Error updating payment status:', err);
-          return res.status(500).json({ success: false, message: 'Error updating payment status' });
+          console.error("Error updating payment status:", err);
+          return res
+            .status(500)
+            .json({ success: false, message: "Error updating payment status" });
         }
       });
 
@@ -715,8 +757,10 @@ app.post('/success', async (req, res) => {
       `;
       db.query(bookingQuery, [tran_id], (err, result) => {
         if (err) {
-          console.error('Error fetching booking data:', err);
-          return res.status(500).json({ success: false, message: 'Error fetching booking data' });
+          console.error("Error fetching booking data:", err);
+          return res
+            .status(500)
+            .json({ success: false, message: "Error fetching booking data" });
         }
 
         if (result.length > 0) {
@@ -728,21 +772,28 @@ app.post('/success', async (req, res) => {
             SET status = ?
             WHERE id = ?
           `;
-          const bookingValues = ['confirmed', booking_id];
+          const bookingValues = ["confirmed", booking_id];
 
           db.query(bookingUpdateQuery, bookingValues, (err, result) => {
             if (err) {
-              console.error('Error updating booking status:', err);
-              return res.status(500).json({ success: false, message: 'Error updating booking status' });
+              console.error("Error updating booking status:", err);
+              return res
+                .status(500)
+                .json({
+                  success: false,
+                  message: "Error updating booking status",
+                });
             }
 
             // ✅ Redirect to the My Bookings page on frontend after successful payment
-            return res.redirect(`http://localhost:5173/payment-success?tran_id=${tran_id}`);
+            return res.redirect(
+              `http://localhost:5173/payment-success?tran_id=${tran_id}`
+            );
           });
         } else {
           return res.status(400).json({
             success: false,
-            message: 'No booking found for this transaction.',
+            message: "No booking found for this transaction.",
           });
         }
       });
@@ -750,54 +801,52 @@ app.post('/success', async (req, res) => {
       // Payment is invalid
       res.status(400).json({
         success: false,
-        message: 'Invalid payment. Please check your transaction.',
+        message: "Invalid payment. Please check your transaction.",
       });
     }
   } catch (error) {
-    console.error('Error validating payment:', error);
+    console.error("Error validating payment:", error);
     res.status(500).json({
       success: false,
-      message: 'Failed to validate payment.',
+      message: "Failed to validate payment.",
     });
   }
 });
 
-
-
-app.patch('/bookings/update/:bookingId', (req, res) => {
-  const { bookingId } = req.params;  // Extract the booking ID from the URL
+app.patch("/bookings/update/:bookingId", (req, res) => {
+  const { bookingId } = req.params; // Extract the booking ID from the URL
   const bookingUpdateQuery = `
     UPDATE bookings
     SET status = ?
     WHERE id = ?
   `;
-  const bookingValues = ['confirmed', bookingId]; // Set status to 'confirmed'
+  const bookingValues = ["confirmed", bookingId]; // Set status to 'confirmed'
 
   db.query(bookingUpdateQuery, bookingValues, (err, result) => {
     if (err) {
-      console.error('Error updating booking status:', err);
+      console.error("Error updating booking status:", err);
       return res.status(500).json({
         success: false,
-        message: 'Failed to update booking status.',
+        message: "Failed to update booking status.",
       });
     }
 
     if (result.affectedRows === 0) {
       return res.status(404).json({
         success: false,
-        message: 'Booking not found.',
+        message: "Booking not found.",
       });
     }
 
     res.json({
       success: true,
-      message: 'Booking status updated to confirmed.',
+      message: "Booking status updated to confirmed.",
     });
   });
 });
 
 // This route is for requesting the cancellation of a booking.
-app.patch('/bookings/cancel/request/:bookingId', (req, res) => {
+app.patch("/bookings/cancel/request/:bookingId", (req, res) => {
   const { bookingId } = req.params;
 
   // Query to update the booking status to "Cancellation Requested"
@@ -809,10 +858,10 @@ app.patch('/bookings/cancel/request/:bookingId', (req, res) => {
 
   db.query(updateBookingQuery, [bookingId], (err, result) => {
     if (err) {
-      console.error('Error requesting cancellation:', err);
+      console.error("Error requesting cancellation:", err);
       return res.status(500).json({
         success: false,
-        message: 'Error requesting cancellation. Please try again.',
+        message: "Error requesting cancellation. Please try again.",
       });
     }
 
@@ -820,18 +869,17 @@ app.patch('/bookings/cancel/request/:bookingId', (req, res) => {
       // Successfully updated booking status
       return res.status(200).json({
         success: true,
-        message: 'Cancellation request successfully sent.',
+        message: "Cancellation request successfully sent.",
       });
     } else {
       // No rows affected, meaning the bookingId doesn't exist
       return res.status(404).json({
         success: false,
-        message: 'Booking not found.',
+        message: "Booking not found.",
       });
     }
   });
 });
-
 
 app.patch("/bookings/cancel/deny/:bookingId", (req, res) => {
   const { bookingId } = req.params;
@@ -848,12 +896,13 @@ app.patch("/bookings/cancel/deny/:bookingId", (req, res) => {
       return res.status(404).json({ error: "Booking not found" });
     }
 
-    res.status(200).json({ success: true, message: "Cancellation request denied!" });
+    res
+      .status(200)
+      .json({ success: true, message: "Cancellation request denied!" });
   });
 });
 
-
-// payment 
+// payment
 // Fetch all payments (Admin)
 app.get("/admin/payments", (req, res) => {
   const query = "SELECT * FROM payments";
@@ -875,10 +924,11 @@ app.delete("/admin/payments/:paymentId", (req, res) => {
       console.error("Error deleting payment:", err);
       return res.status(500).json({ error: "Database delete failed" });
     }
-    res.status(200).json({ success: true, message: "Payment deleted successfully!" });
+    res
+      .status(200)
+      .json({ success: true, message: "Payment deleted successfully!" });
   });
 });
-
 
 // Get payments for the logged-in user
 app.get("/user/payments/:email", (req, res) => {
@@ -893,9 +943,6 @@ app.get("/user/payments/:email", (req, res) => {
     res.status(200).json({ data: result });
   });
 });
-
-
-
 
 // ✅ Delete Booking (Admin Removes Booking)
 app.delete("/bookings/admin/:bookingId", (req, res) => {
@@ -929,16 +976,15 @@ app.delete("/bookings/admin/:bookingId", (req, res) => {
           return res.status(500).json({ error: "Error deleting booking" });
         }
 
-        res.status(200).json({ success: true, message: "Booking deleted successfully!" });
+        res
+          .status(200)
+          .json({ success: true, message: "Booking deleted successfully!" });
       });
     });
   });
 });
 
-
-
-
-app.get('/cart/:userId', (req, res) => {
+app.get("/cart/:userId", (req, res) => {
   const { userId } = req.params;
 
   const query = `
@@ -959,7 +1005,7 @@ app.get('/cart/:userId', (req, res) => {
   });
 });
 
-app.delete('/wishlist/:id', (req, res) => {
+app.delete("/wishlist/:id", (req, res) => {
   const { id } = req.params; // Extract wishlist item ID from URL
 
   const query = "DELETE FROM wishlist WHERE id = ?";
@@ -978,9 +1024,7 @@ app.delete('/wishlist/:id', (req, res) => {
   });
 });
 
-
-
-app.get('/reviews/user/:userId', (req, res) => {
+app.get("/reviews/user/:userId", (req, res) => {
   const { userId } = req.params;
 
   const query = `
@@ -1000,6 +1044,34 @@ app.get('/reviews/user/:userId', (req, res) => {
   });
 });
 
+// messages table
+app.post("/api/contact", (req, res) => {
+  const { name, email, message } = req.body;
+  if (!name || !email || !message) {
+    return res.status(400).json({ message: "All fields are required" });
+  }
+
+  const query = "INSERT INTO messages (name, email, message) VALUES (?, ?, ?)";
+  db.query(query, [name, email, message], (err, result) => {
+    if (err) {
+      console.error("Error inserting message: ", err);
+      return res.status(500).json({ message: "Internal Server Error" });
+    }
+    res.json({ message: "Message sent successfully!" });
+  });
+});
+
+app.get("/api/messages", (req, res) => {
+  const query = "SELECT * FROM messages ORDER BY submitted_at DESC";
+  db.query(query, (err, results) => {
+      if (err) {
+          console.error("Error fetching messages: ", err);
+          return res.status(500).json({ message: "Internal Server Error" });
+      }
+      res.json(results);
+  });
+});
+
 
 // Store ID: trave67a744c6aff5c
 // Store Password (API/Secret Key): trave67a744c6aff5c@ssl
@@ -1010,26 +1082,17 @@ app.get('/reviews/user/:userId', (req, res) => {
 // Validation API: https://sandbox.sslcommerz.com/validator/api/validationserverAPI.php?wsdl
 // Validation API (Web Service) name: https://sandbox.sslcommerz.com/validator/api/validationserverAPI.php
 
-
-
-
-
-
-
 db.connect((err) => {
   if (err) {
-    console.error('Database connection failed:', err);
+    console.error("Database connection failed:", err);
   } else {
-    console.log('Connected to MySQL database');
+    console.log("Connected to MySQL database");
   }
 });
 
-
-app.get('/', (req, res) => {
-  res.send('hello there!')
-})
-
-
+app.get("/", (req, res) => {
+  res.send("hello there!");
+});
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
