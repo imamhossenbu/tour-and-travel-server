@@ -1,11 +1,15 @@
 const express = require("express");
 const app = express();
-const mysql = require("mysql2"); 
+const mysql = require("mysql2");
 const dotenv = require("dotenv");
 const cors = require("cors"); // Import CORS
 const PORT = process.env.PORT || 5000;
 dotenv.config();
 const axios = require("axios"); // Import Axios for making HTTP requests
+const SSLCommerzPayment = require('sslcommerz-lts')
+const store_id = 'trave67a744c6aff5c';
+const store_passwd = 'trave67a744c6aff5c@ssl';
+const is_live = false;
 
 // middleware
 app.use(cors());
@@ -14,9 +18,9 @@ app.use(express.urlencoded());
 
 const db = mysql.createConnection({
   host: process.env.MYSQL_ADDON_HOST,
-  user: process.env.MYSQL_ADDON_USER ,
-  password: process.env.MYSQL_ADDON_PASSWORD ,
-  database: process.env.MYSQL_ADDON_DB ,
+  user: process.env.MYSQL_ADDON_USER,
+  password: process.env.MYSQL_ADDON_PASSWORD,
+  database: process.env.MYSQL_ADDON_DB,
   port: process.env.MYSQL_ADDON_PORT || 3306,
 });
 
@@ -64,6 +68,25 @@ app.get("/api/users", (req, res) => {
     res.json({ success: true, data: results });
   });
 });
+
+// app.get("/user/:email", (req, res) => {
+//   const email = req.params.email; // Get email from URL
+
+//   const query = "SELECT id FROM users WHERE email = ?";
+//   db.query(query, [email], (err, results) => {
+//     if (err) {
+//       console.error("❌ Database error:", err);
+//       return res.status(500).json({ success: false, message: "Database error" });
+//     }
+
+//     if (results.length === 0) {
+//       return res.status(404).json({ success: false, message: "User not found" });
+//     }
+
+//     res.json({ success: true, id: results[0].id });
+//   });
+// });
+
 
 app.get("/users/isAdmin/:email", (req, res) => {
   const email = req.params.email;
@@ -604,10 +627,117 @@ app.get("/bookings/details/:bookingId", (req, res) => {
 
 // payment initiated
 
+
+// app.post("/sslcommerz/initiate", async (req, res) => {
+//   const {
+//     booking_id,
+//     user_id,
+//     amount,
+//     currency,
+//     cus_name,
+//     cus_email,
+//     cus_phone,
+//     payment_status,
+//   } = req.body;
+
+
+
+//   const tran_id = `tran_${Date.now()}`
+
+//   const data = {
+//     total_amount: amount,
+//     currency: currency,
+//     tran_id: tran_id, // use unique tran_id for each api call
+//     success_url: 'http://localhost:5000/success',
+//     fail_url: 'http://localhost:5173/fail',
+//     cancel_url: 'http://localhost:5173/cancel',
+//     ipn_url: 'http://localhost:5000/ipn',
+//     shipping_method: 'Courier',
+//     product_name: 'Computer.',
+//     product_category: 'Electronic',
+//     product_profile: 'general',
+//     cus_name: cus_name,
+//     cus_email: cus_email,
+//     cus_add1: 'Dhaka',
+//     cus_add2: 'Dhaka',
+//     cus_city: 'Dhaka',
+//     cus_state: 'Dhaka',
+//     cus_postcode: '1000',
+//     cus_country: 'Bangladesh',
+//     cus_phone: cus_phone,
+//     cus_fax: '01711111111',
+//     ship_name: 'Customer Name',
+//     ship_add1: 'Dhaka',
+//     ship_add2: 'Dhaka',
+//     ship_city: 'Dhaka',
+//     ship_state: 'Dhaka',
+//     ship_postcode: 1000,
+//     ship_country: 'Bangladesh',
+//   };
+//   const sslcz = new SSLCommerzPayment(store_id, store_passwd, is_live)
+//   sslcz.init(data).then(apiResponse => {
+//     // Redirect the user to payment gateway
+//     let GatewayPageURL = apiResponse.GatewayPageURL
+//     res.send({ url: GatewayPageURL })
+//     console.log('Redirecting to: ', GatewayPageURL)
+//   });
+
+
+
+//   try {
+//     const iniResponse = await axios({
+//       url: "https://sandbox.sslcommerz.com/gwprocess/v4/api.php",
+//       method: "POST",
+//       data: qs.stringify(paymentData), // ✅ URL-encoded
+//       headers: { "Content-Type": "application/x-www-form-urlencoded" }
+//     });
+
+//     if (iniResponse.data.GatewayPageURL) {
+//       // Insert payment with Pending status
+//       const paymentInsertQuery = `
+//         INSERT INTO payments (
+//           booking_id, user_id, amount, currency, cus_name, cus_email, cus_phone,
+//           payment_date, payment_status, payment_method, transaction_id
+//         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+//       `;
+
+//       const paymentValues = [
+//         booking_id,
+//         user_id,
+//         amount,
+//         currency,
+//         cus_name,
+//         cus_email,
+//         cus_phone,
+//         new Date(),
+//         "Pending", // force Pending
+//         "SSLCommerz",
+//         tran_id
+//       ];
+
+//       db.query(paymentInsertQuery, paymentValues, (err) => {
+//         if (err) {
+//           console.error("❌ Error inserting payment data:", err);
+//           return res
+//             .status(500)
+//             .json({ success: false, message: "Failed to save payment data" });
+//         }
+
+//         console.log("✅ Redirecting to payment gateway:", iniResponse.GatewayPageURL);
+//         res.json({ success: true, url: iniResponse.GatewayPageURL });
+//       });
+//     } else {
+//       res.status(500).json({ success: false, message: "Failed to create payment" });
+//     }
+//   } catch (error) {
+//     console.error("❌ Error initiating payment:", error);
+//     res.status(500).json({ success: false, message: "Error initiating payment" });
+//   }
+// });
+
 app.post("/sslcommerz/initiate", async (req, res) => {
   const {
     booking_id,
-    user_id,
     amount,
     currency,
     cus_name,
@@ -616,202 +746,171 @@ app.post("/sslcommerz/initiate", async (req, res) => {
     payment_status,
   } = req.body;
 
-  // const store_id = process.env.SSL_store_id;
-  // const store_passwd = process.env.SSL_store_passwd;
-
   const tran_id = `tran_${Date.now()}`;
-  const paymentData = {
-    store_id: "trave67a744c6aff5c",
-    store_passwd: "trave67a744c6aff5c@ssl",
+
+  const data = {
     total_amount: amount,
-    currency: "BDT",
-    tran_id: tran_id, // Use unique tran_id for each API call
-    success_url: "http://localhost:5000/success",
-    fail_url: "http://localhost:5173/fail",
-    cancel_url: "http://localhost:5173/cancel",
-    ipn_url: "http://localhost:5000/ipn",
-    shipping_method: "Courier",
-    product_name: "Computer.",
-    product_category: "Electronic",
-    product_profile: "general",
+    currency: currency,
+    tran_id: tran_id, // use unique tran_id for each api call
+    success_url: 'http://localhost:5000/success',
+    fail_url: 'http://localhost:5173/fail',
+    cancel_url: 'http://localhost:5173/cancel',
+    ipn_url: 'http://localhost:5000/ipn',
+    shipping_method: 'Courier',
+    product_name: 'Computer.',
+    product_category: 'Electronic',
+    product_profile: 'general',
     cus_name: cus_name,
     cus_email: cus_email,
-    cus_add1: "Dhaka",
-    cus_add2: "Dhaka",
-    cus_city: "Dhaka",
-    cus_state: "Dhaka",
-    cus_postcode: "1000",
-    cus_country: "Bangladesh",
+    cus_add1: 'Dhaka',
+    cus_add2: 'Dhaka',
+    cus_city: 'Dhaka',
+    cus_state: 'Dhaka',
+    cus_postcode: '1000',
+    cus_country: 'Bangladesh',
     cus_phone: cus_phone,
-    cus_fax: "01711111111",
-    ship_name: "Customer Name",
-    ship_add1: "Dhaka",
-    ship_add2: "Dhaka",
-    ship_city: "Dhaka",
-    ship_state: "Dhaka",
+    cus_fax: '01711111111',
+    ship_name: 'Customer Name',
+    ship_add1: 'Dhaka',
+    ship_add2: 'Dhaka',
+    ship_city: 'Dhaka',
+    ship_state: 'Dhaka',
     ship_postcode: 1000,
-    ship_country: "Bangladesh",
+    ship_country: 'Bangladesh',
+  };
+
+  const getUserId = (email) => {
+    return new Promise((resolve, reject) => {
+      db.query("SELECT id FROM users WHERE email = ?", [email], (err, results) => {
+        if (err) return reject(err);
+        if (results.length === 0) return reject(new Error("User not found"));
+        resolve(results[0].id); // return the user_id
+      });
+    });
   };
 
   try {
-    const iniResponse = await axios({
-      url: "https://sandbox.sslcommerz.com/gwprocess/v4/api.php",
-      method: "POST",
-      data: paymentData,
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-    });
+    const sslcz = new SSLCommerzPayment(store_id, store_passwd, is_live);
+    const apiResponse = await sslcz.init(data);
 
-    if (iniResponse.data.GatewayPageURL) {
-      const paymentInsertQuery = `
-        INSERT INTO payments (
-          booking_id, user_id, amount, currency, cus_name, cus_email, cus_phone,
-          payment_date, payment_status, payment_method, transaction_id
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `;
+    const user_id = await getUserId(cus_email);
+    // After successful initiation, save payment details to the database with "Pending" status
+    const paymentInsertQuery = `
+      INSERT INTO payments (
+        booking_id, user_id, amount, currency, cus_name, cus_email, cus_phone,
+        payment_date, payment_status, payment_method, transaction_id
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `;
 
-      const paymentValues = [
-        booking_id,
-        user_id,
-        amount,
-        currency,
-        cus_name,
-        cus_email,
-        cus_phone,
-        new Date(), // Set payment date to current time
-        payment_status, // Payment status (could be "Pending" initially)
-        "SSLCommerz", // Payment method
-        tran_id, // Transaction ID
-      ];
+    const paymentValues = [
+      booking_id,
+      user_id,
+      amount,
+      currency,
+      cus_name,
+      cus_email,
+      cus_phone,
+      new Date(),
+      "Pending", // force Pending
+      "SSLCommerz",
+      tran_id
+    ];
 
-      db.query(paymentInsertQuery, paymentValues, (err, result) => {
+    // Using a promise-based approach for database query
+    await new Promise((resolve, reject) => {
+      db.query(paymentInsertQuery, paymentValues, (err) => {
         if (err) {
-          console.error("Error inserting payment data:", err);
-          return res
-            .status(500)
-            .json({ success: false, message: "Failed to save payment data" });
+          console.error("❌ Error inserting payment data:", err);
+          return reject(err);
         }
-
-        // Respond with success and redirect URL
-        res.json({
-          success: true,
-          message: "Payment initialization successful",
-          GatewayPageURL: iniResponse.data.GatewayPageURL, // Provide URL to redirect user
-        });
+        resolve();
       });
-    } else {
-      res.status(500).json({
-        success: false,
-        message: "Payment initialization failed",
-      });
-    }
-  } catch (error) {
-    console.error("Error initiating payment:", error);
-    res.status(500).json({
-      success: false,
-      message: "Error initiating payment",
     });
+
+    // Redirect the user to payment gateway
+    let GatewayPageURL = apiResponse.GatewayPageURL;
+    res.send({ url: GatewayPageURL });
+    console.log('✅ Redirecting to: ', GatewayPageURL);
+
+  } catch (error) {
+    console.error("❌ Error initiating payment or saving to DB:", error);
+    res.status(500).json({ success: false, message: "Error initiating payment" });
   }
 });
 
 app.post("/success", async (req, res) => {
-  const paymentData = req.body;
+  console.log("✅ Success Callback Data:", req.body);
 
-  // Log payment data for debugging
-  console.log(paymentData);
+  const { val_id, tran_id } = req.body;
+  console.log(val_id, tran_id);
 
-  // Extract val_id and tran_id from paymentData to use in validation request
-  const { val_id, tran_id } = paymentData;
+  if (!val_id || !tran_id) {
+    return res.status(400).json({ success: false, message: "Invalid callback data" });
+  }
 
   try {
-    // Corrected URL for SSLCommerz validation API request
-    const validationUrl = `https://sandbox.sslcommerz.com/validator/api/validationserverAPI.php?val_id=${val_id}&store_id=trave67a744c6aff5c&store_passwd=trave67a744c6aff5c@ssl&format=json`;
+    // ✅ Use built-in validate() instead of axios.get()
+    const sslcz = new SSLCommerzPayment(store_id, store_passwd, is_live);
+    const validation = await sslcz.validate({ val_id });
 
-    // Make GET request to validate payment
-    const isValidPayment = await axios.get(validationUrl);
-
-    if (isValidPayment.data.status === "VALID") {
-      // 1. Update payment status
-      const paymentUpdateQuery = `
-          UPDATE payments
-          SET payment_status = ?
-          WHERE transaction_id = ?
-        `;
-      const paymentValues = ["success", tran_id];
-
-      db.query(paymentUpdateQuery, paymentValues, (err, result) => {
-        if (err) {
-          console.error("Error updating payment status:", err);
-          return res
-            .status(500)
-            .json({ success: false, message: "Error updating payment status" });
+    if (validation?.status === "VALID") {
+      // Update payment status
+      db.query(
+        `UPDATE payments SET payment_status = ? WHERE transaction_id = ?`,
+        ["success", tran_id],
+        (err) => {
+          if (err) {
+            console.error("❌ Error updating payment status:", err);
+          }
         }
-      });
+      );
 
-      // 2. Query the payments table to get the booking_id based on transaction_id
-      const bookingQuery = `
-        SELECT booking_id
-        FROM payments
-        WHERE transaction_id = ?
-      `;
-      db.query(bookingQuery, [tran_id], (err, result) => {
-        if (err) {
-          console.error("Error fetching booking data:", err);
-          return res
-            .status(500)
-            .json({ success: false, message: "Error fetching booking data" });
-        }
+      // Fetch booking_id
+      db.query(
+        `SELECT booking_id FROM payments WHERE transaction_id = ?`,
+        [tran_id],
+        (err, result) => {
+          if (err) {
+            console.error("❌ Error fetching booking_id:", err);
+            return res.status(500).json({ success: false });
+          }
 
-        if (result.length > 0) {
-          const booking_id = result[0].booking_id;
+          if (result.length > 0) {
+            const booking_id = result[0].booking_id;
 
-          // 3. Update the booking status to 'confirmed'
-          const bookingUpdateQuery = `
-            UPDATE bookings
-            SET status = ?
-            WHERE id = ?
-          `;
-          const bookingValues = ["confirmed", booking_id];
+            // Update booking status
+            db.query(
+              `UPDATE bookings SET status = ? WHERE id = ?`,
+              ["confirmed", booking_id],
+              (err) => {
+                if (err) {
+                  console.error("❌ Error updating booking status:", err);
+                  return res.status(500).json({ success: false });
+                }
 
-          db.query(bookingUpdateQuery, bookingValues, (err, result) => {
-            if (err) {
-              console.error("Error updating booking status:", err);
-              return res
-                .status(500)
-                .json({
-                  success: false,
-                  message: "Error updating booking status",
-                });
-            }
-
-            // ✅ Redirect to the My Bookings page on frontend after successful payment
-            return res.redirect(
-              `http://localhost:5173/payment-success?tran_id=${tran_id}`
+                console.log("✅ Payment success for booking:", booking_id);
+                return res.redirect(
+                  `http://localhost:5173/payment-success?tran_id=${tran_id}`
+                );
+              }
             );
-          });
-        } else {
-          return res.status(400).json({
-            success: false,
-            message: "No booking found for this transaction.",
-          });
+          } else {
+            return res.status(404).json({
+              success: false,
+              message: "No booking found for this transaction"
+            });
+          }
         }
-      });
+      );
     } else {
-      // Payment is invalid
-      res.status(400).json({
-        success: false,
-        message: "Invalid payment. Please check your transaction.",
-      });
+      res.status(400).json({ success: false, message: "Invalid payment" });
     }
   } catch (error) {
-    console.error("Error validating payment:", error);
-    res.status(500).json({
-      success: false,
-      message: "Failed to validate payment.",
-    });
+    console.error("❌ Error validating payment:", error);
+    res.status(500).json({ success: false, message: "Failed to validate payment" });
   }
 });
+
 
 app.patch("/bookings/update/:bookingId", (req, res) => {
   const { bookingId } = req.params; // Extract the booking ID from the URL
@@ -1064,11 +1163,11 @@ app.post("/api/contact", (req, res) => {
 app.get("/api/messages", (req, res) => {
   const query = "SELECT * FROM messages ORDER BY submitted_at DESC";
   db.query(query, (err, results) => {
-      if (err) {
-          console.error("Error fetching messages: ", err);
-          return res.status(500).json({ message: "Internal Server Error" });
-      }
-      res.json(results);
+    if (err) {
+      console.error("Error fetching messages: ", err);
+      return res.status(500).json({ message: "Internal Server Error" });
+    }
+    res.json(results);
   });
 });
 
