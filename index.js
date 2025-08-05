@@ -22,6 +22,9 @@ const db = mysql.createConnection({
   password: process.env.MYSQL_ADDON_PASSWORD,
   database: process.env.MYSQL_ADDON_DB,
   port: process.env.MYSQL_ADDON_PORT || 3306,
+  waitForConnections: true,
+  connectionLimit: 10, // max simultaneous connections
+  queueLimit: 0
 });
 
 app.post("/api/users", (req, res) => {
@@ -628,112 +631,7 @@ app.get("/bookings/details/:bookingId", (req, res) => {
 // payment initiated
 
 
-// app.post("/sslcommerz/initiate", async (req, res) => {
-//   const {
-//     booking_id,
-//     user_id,
-//     amount,
-//     currency,
-//     cus_name,
-//     cus_email,
-//     cus_phone,
-//     payment_status,
-//   } = req.body;
 
-
-
-//   const tran_id = `tran_${Date.now()}`
-
-//   const data = {
-//     total_amount: amount,
-//     currency: currency,
-//     tran_id: tran_id, // use unique tran_id for each api call
-//     success_url: 'http://localhost:5000/success',
-//     fail_url: 'http://localhost:5173/fail',
-//     cancel_url: 'http://localhost:5173/cancel',
-//     ipn_url: 'http://localhost:5000/ipn',
-//     shipping_method: 'Courier',
-//     product_name: 'Computer.',
-//     product_category: 'Electronic',
-//     product_profile: 'general',
-//     cus_name: cus_name,
-//     cus_email: cus_email,
-//     cus_add1: 'Dhaka',
-//     cus_add2: 'Dhaka',
-//     cus_city: 'Dhaka',
-//     cus_state: 'Dhaka',
-//     cus_postcode: '1000',
-//     cus_country: 'Bangladesh',
-//     cus_phone: cus_phone,
-//     cus_fax: '01711111111',
-//     ship_name: 'Customer Name',
-//     ship_add1: 'Dhaka',
-//     ship_add2: 'Dhaka',
-//     ship_city: 'Dhaka',
-//     ship_state: 'Dhaka',
-//     ship_postcode: 1000,
-//     ship_country: 'Bangladesh',
-//   };
-//   const sslcz = new SSLCommerzPayment(store_id, store_passwd, is_live)
-//   sslcz.init(data).then(apiResponse => {
-//     // Redirect the user to payment gateway
-//     let GatewayPageURL = apiResponse.GatewayPageURL
-//     res.send({ url: GatewayPageURL })
-//     console.log('Redirecting to: ', GatewayPageURL)
-//   });
-
-
-
-//   try {
-//     const iniResponse = await axios({
-//       url: "https://sandbox.sslcommerz.com/gwprocess/v4/api.php",
-//       method: "POST",
-//       data: qs.stringify(paymentData), // ✅ URL-encoded
-//       headers: { "Content-Type": "application/x-www-form-urlencoded" }
-//     });
-
-//     if (iniResponse.data.GatewayPageURL) {
-//       // Insert payment with Pending status
-//       const paymentInsertQuery = `
-//         INSERT INTO payments (
-//           booking_id, user_id, amount, currency, cus_name, cus_email, cus_phone,
-//           payment_date, payment_status, payment_method, transaction_id
-//         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-//       `;
-
-//       const paymentValues = [
-//         booking_id,
-//         user_id,
-//         amount,
-//         currency,
-//         cus_name,
-//         cus_email,
-//         cus_phone,
-//         new Date(),
-//         "Pending", // force Pending
-//         "SSLCommerz",
-//         tran_id
-//       ];
-
-//       db.query(paymentInsertQuery, paymentValues, (err) => {
-//         if (err) {
-//           console.error("❌ Error inserting payment data:", err);
-//           return res
-//             .status(500)
-//             .json({ success: false, message: "Failed to save payment data" });
-//         }
-
-//         console.log("✅ Redirecting to payment gateway:", iniResponse.GatewayPageURL);
-//         res.json({ success: true, url: iniResponse.GatewayPageURL });
-//       });
-//     } else {
-//       res.status(500).json({ success: false, message: "Failed to create payment" });
-//     }
-//   } catch (error) {
-//     console.error("❌ Error initiating payment:", error);
-//     res.status(500).json({ success: false, message: "Error initiating payment" });
-//   }
-// });
 
 app.post("/sslcommerz/initiate", async (req, res) => {
   const {
